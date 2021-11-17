@@ -1,0 +1,63 @@
+//
+// The purpose of this program is to analyze a record of temperatures and
+// find the one closest to zero. Algorithm:
+//
+// 1. Input number of temperatures to analyze and output default value of
+//    0 if there are no temperatures, otherwise set default to maximum
+//    value that can be represented with int.
+// 2. Loop until all temperatures have been analyzed.
+//    A. Input a new temperature and check whether its absolute value
+//        is smaller than the previous temperature stored. If so,
+//        update that temperature.
+//    B. If both temperatures are the same and negative, the result is
+//        their value; if they are the same magnitude and opposite signs,
+//        the result is their absolute value.
+// 3. Output the result, which is the temperature closest to 0.
+//
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+int main()
+{
+    // the number of temperatures to analyse
+    int n, result;
+    scanf("%d", &n);
+    // returns default value if no temperatures, else set max value
+    if (n == 0)
+    {
+        result = 0;
+    }
+    else
+    {
+        result = INT_MAX;
+    }
+    for (int i = 0; i < n; i++) {
+        // a temperature expressed as an integer ranging from -273 to 5526
+        int t;
+        scanf("%d", &t);
+        // compares absolute value of stored result and current temperature
+        if (abs(t) < abs(result))
+        {
+            result = t;
+        }
+        // special cases for result and t equal
+        else if (abs(t) == abs(result))
+        {
+            // handles case when both temperatures are negative
+            if (t < 0 && result < 0)
+            {
+                result = t;
+            }
+            // handles case when temperatures are equal but opposite sign
+            else
+            {
+                result = abs(t);
+            }            
+        }
+    }
+
+    printf("%d\n", result);     // outputs temperature closest to 0
+    return(EXIT_SUCCESS);
+}
