@@ -1,0 +1,75 @@
+//
+// The purpose of this program is to simulate Thor's quest to find the
+// light of power in order to restore his and Mjolnir's powers.
+// Algorithm:
+//
+// 1. Define variables denoting the coordinates of the light of power
+//    and Thor's current position.
+// 2. Implement a loop that continues until Thor reaches the light of
+//    power or until the maximum number of game turns has been reached.
+//    A. Determine vertical/horizontal directions Thor should move in
+//      based on his location and the light of power's location.
+//      Directions are defaulted to no value and only take on a value if
+//      Thor needs to move in that direction.
+//    B. Output the direction for Thor to move in, combining directions
+//      as needed.
+//
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define NORTH "N"
+#define SOUTH "S"
+#define EAST "E"
+#define WEST "W"
+
+int main()
+{
+    // the X position of the light of power
+    int light_x;
+    // the Y position of the light of power
+    int light_y;
+    // Thor's starting X position
+    int initial_tx;
+    // Thor's starting Y position
+    int initial_ty;
+    scanf("%d%d%d%d", &light_x, &light_y, &initial_tx, &initial_ty);
+    // keeps track of Thor's current position
+    int thorX = initial_tx;
+    int thorY = initial_ty;
+
+    // game loop
+    while (1) {
+        // The remaining amount of turns Thor can move. Do not remove this line.
+        int remaining_turns;
+        scanf("%d", &remaining_turns);
+        // represents directions Thor should move in
+        char *directionX = "";
+        char *directionY = "";
+        // determines which direction Thor should move to reach light
+        if (thorX > light_x)
+        {
+            directionX = WEST;
+            --thorX;
+        }
+        else if (thorX < light_x)
+        {
+            directionX = EAST;
+            ++thorX;
+        }
+        if (thorY > light_y)
+        {
+            directionY = NORTH;
+            --thorY;
+        }
+        else if (thorY < light_y)
+        {
+            directionY = SOUTH;
+            ++thorY;
+        }
+
+        // A single line providing the move to be made: N NE E SE S SW W or NW
+        printf("%s%s\n", directionY, directionX);
+    }
+    return(EXIT_SUCCESS);
+}
