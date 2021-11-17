@@ -1,0 +1,73 @@
+//
+// The purpose of this program is to simulate a shuttle attempting to land on
+// the surface of Mars. The solution to this puzzle is the first level among
+// three, so the implementation is very basic. Algorithm:
+//
+// 1. Input the coordinates of points used to draw the surface of Mars.
+// 2. In an infinite loop, do the following:
+//    A. Input horizontal/vertical speeds. Can be negative if lander is falling
+//      and positive if lander is flying upward.
+//    B. Input remaining fuel in liters, rotation angle (-90 to 90 degrees), and
+//      thrust power (0 to 4).
+//    C. Increase the thrust power towards the maximum if the lander is falling
+//      too quickly (abs value can't be greater than 40 m/s and thrust power can
+//      only change by a value of +/- 1 per iteration). Or decrease thrust power
+//      towards 0 if lander is falling too slowly. The higher the thrust power,
+//      the slower the lander falls.
+//    D. Output the thrust power, and repeat the loop until the lander reaches
+//      the surface of Mars.
+//
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// macros for defining speed/power limits
+#define LIMIT       -40
+#define MAXPOWER    4
+
+int main()
+{
+    // the number of points used to draw the surface of Mars.
+    int surface_n;
+    scanf("%d", &surface_n);
+    for (int i = 0; i < surface_n; i++) {
+        // X coordinate of a surface point. (0 to 6999)
+        int land_x;
+        // Y coordinate of a surface point. By linking all the points together 
+        // in a sequential fashion, you form the surface of Mars.
+        int land_y;
+        scanf("%d%d", &land_x, &land_y);
+    }
+
+    // game loop
+    while (1) {
+        int X;
+        int Y;
+        // the horizontal speed (in m/s), can be negative.
+        int h_speed;
+        // the vertical speed (in m/s), can be negative.
+        int v_speed;
+        // the quantity of remaining fuel in liters.
+        int fuel;
+        // the rotation angle in degrees (-90 to 90).
+        int rotate;
+        // the thrust power (0 to 4).
+        int power;
+        scanf("%d%d%d%d%d%d%d", &X, &Y, &h_speed, &v_speed, &fuel, &rotate, &power);
+
+        // increases thrust power towards max if shuttle falling too quickly
+        if (v_speed <= LIMIT && power != MAXPOWER)
+        {
+            ++power;
+        }
+        // decreases thrust power towards 0 if shuttle falling too slowly
+        else if (v_speed > LIMIT && power != 0)
+        {
+            --power;
+        }
+        // 2 integers: rotate power. rotate is the desired rotation angle 
+        // (should be 0 for level 1), power is the desired thrust power (0 to 4).
+        printf("0 %d\n", power);
+    }
+    return(EXIT_SUCCESS);
+}
