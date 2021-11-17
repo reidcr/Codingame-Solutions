@@ -1,0 +1,49 @@
+//
+// The purpose of this program is to simulate an environment where mountains need to
+// be destroyed before Kirk and Spock's starship can land, and the mountains must be
+// destroyed before the starship hits them. Algorithm:
+//
+// 1. The entirety of the program takes place over an infinite loop.
+//    A. Variables representing the mountain to be fired upon and the number of
+//      mountains are declared.
+//    B. Inputs the height of each mountain and calculates the largest height.
+//      Sets the index of the mountain corresponding to this height.
+//    C. Outputs the index of the mountain to be fired upon, which is the
+//      mountain of the highest height once all mountain heights have been input.
+//    D. Loop repeats until all mountains are gone.
+//
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define NUMMT 8     // number of mountains to fire upon
+
+/**
+ * The while loop represents the game.
+ * Each iteration represents a turn of the game
+ * where you are given inputs (the heights of the mountains)
+ * and where you have to print an output (the index of the mountain to fire on)
+ * The inputs you are given are automatically updated according to your last actions.
+ **/
+
+int main()
+{
+    // game loop
+    while (1) {
+    int iMax;       // index of mountain to fire upon
+    int mMax = 0;   // height of tallest mountain
+        for (int i = 0; i < NUMMT; i++) {
+            // represents the height of one mountain.
+            int mountain_h;
+            scanf("%d", &mountain_h);
+            // finds the tallest mountain height and updates mountain index
+            if (mountain_h > mMax)
+            {
+                mMax = mountain_h;
+                iMax = i;
+            }
+        }
+        printf("%d\n", iMax); // The index of the mountain to fire on.
+    }
+    return(EXIT_SUCCESS);
+}
