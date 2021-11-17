@@ -1,0 +1,111 @@
+//
+// The purpose of this program is to input a binary string consisting of 0's
+// and 1's, and convert it to a unary string consisting of only 0's using the
+// Chuck Norris method. Algorithm:
+//
+// 1. Get input message from Chuck Norris and calculate number of characters
+//    in the message.
+// 2. Define a char string to hold the binary string and initialize it to all
+//    0's.
+// 3. Implement a loop to convert the input message into a binary string.
+//    A. Get the current character and calculate the number of bits needed to
+//      represent it in binary.
+//    B. If only 6 bits are needed, append an extra bit to the beginning to
+//      make 7 bits.
+//    C. Implement a loop that uses shifts to extract each bit one at a time
+//      and append a 0 or 1 to the binary string as needed.
+// 4. Look at the first character in the binary string and print "0 0" or
+//      "00 0" depending on whether it is 1 or 0 respectively.
+// 5. Implement a loop to check whether the next character is the same as the
+//      previous character; if so output 0, else output a space then output
+//      "0 0" or "00 0" as needed, and continue the loop until the end of the
+//      binary string has been reached.
+// 6. Once the above loop has completed, the unary equivalent of the input
+//    message should have been printed.
+//
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+
+#define CONST       101         // maximum number of characters in message
+#define RADIX       2           // used for converting to binary string
+#define BITS        7           // number of bits needed to represent character
+#define SMALLBITS   6           // number of bits may be smaller than typical 7
+#define ASCIICODE1  49          // ASCII code for 1
+#define ASCIICODE0  48          // ASCII code for 0
+
+int main()
+{
+    // gets input message from Chuck Norris
+    char message[CONST];
+    fgets(message, CONST, stdin);
+    // calculates number of characters in message
+    int length = strlen(message) - 1;
+    char binaryStr[length * BITS];
+    // zeros contents of entire string before appending
+    memset(binaryStr, 0, length * BITS);
+    // following loop converts message to binary string
+    for (int element = 0; element < length; ++element)
+    {
+        char currentChar = message[element];    // gets current character
+        // calculates number of bits needed to represent current character in binary
+        int bitNum = log2((unsigned int)currentChar) + 1;
+        char ch;            // used for appending character to string
+        // adds a leading 0 if number of bits is smaller than 7
+        if (bitNum == SMALLBITS)
+        {
+            ch = '0';
+            strncat(binaryStr, &ch, 1);
+        }
+        // loop appends 0 or 1 to binary string as appropriate and continues until
+        // conversion is complete
+        for (int shift = 1 << (bitNum - 1); shift > 0; shift /= RADIX)
+        {
+            if ((currentChar & shift) != 0)
+            {
+                ch = '1';
+                strncat(binaryStr, &ch, 1);
+            }
+            else
+            {
+                ch = '0';
+                strncat(binaryStr, &ch, 1);
+            }
+        }
+    }
+    int binStrLen = strlen(binaryStr) + 1;
+    // prints first character in binary string
+    if (binaryStr[0] == ASCIICODE1)
+    {
+        printf("0 0");
+    }
+    else
+    {
+        printf("00 0");
+    }
+    // loop goes through each character in binary string and checks whether it is the
+    // same as previous character and prints to screen accordingly
+    for (int charElem = 1; charElem < binStrLen - 1; ++charElem)
+    {
+        if (binaryStr[charElem] == binaryStr[charElem - 1])
+        {
+            printf("0");
+        }
+        else
+        {
+            printf(" ");
+            // current char is different from previous char so print correct bit
+            if (binaryStr[charElem] == ASCIICODE0)
+            {
+                printf("00 0");
+            }
+            else
+            {
+                printf("0 0");
+            }
+        }
+    }    
+    return(EXIT_SUCCESS);
+}
