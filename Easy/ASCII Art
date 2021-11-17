@@ -1,0 +1,110 @@
+//
+// The purpose of this program is to display a line of text in ASCII
+// art in a given style.  Algorithm:
+//
+// 1. Input the width and height of a letter in ASCII art.  All letters
+//    are the same width and height.
+// 2. Input the text to convert.
+// 3. Input a 2D array consisting of the ASCII art for each letter,
+//    along with a default character to use for any unrecognized
+//    characters in the text to convert.
+// 4. Print the ASCII art for the text one line at a time in a loop that
+//    continues until all lines have been printed.
+//    A. Each character in the text is checked to make sure it is valid,
+//        else, the default character will be used.
+//    B. The start, end, and length of the substring for each character 
+//        on the current line of the ASCII art array will be calculated.
+//    C. The destination pointer for the output string to print on the
+//        screen is set, then the substring is copied to it.
+//    D. Once the end of the current row in the ASCII art array is
+//        reached, a null char is added, the string is printed to the
+//        screen, all memory is freed, and the process repeats for each
+//        line in the 2D ASCII art array corresponding to the text that
+//        is to be printed.
+// 5. Once all lines of the ASCII art have been printed, the 2D ASCII
+//    art array is freed, and the pointer to it is freed as well.
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define FIRST_CHAR 'a'
+#define LAST_CHAR 'z'
+#define DEFAULT (LAST_CHAR + 1)
+#define CONST 1024
+
+int main()
+{
+    // input width, height
+    int width, height;
+    scanf("%d\n%d\n", &width, &height);
+
+    // input text to convert
+    char text[CONST];
+    fgets(text, CONST, stdin);
+
+    // input ASCII art for each letter + default char
+    char **rows;
+    if ((rows = malloc(height * sizeof(char *))) == NULL)
+    {
+        fputs("Out of memory\n", stderr);
+    }
+    for (int level = 0; level < height; ++level)
+    {
+        if ((rows[level] = malloc(CONST)) == NULL)
+        {
+            fputs("Out of memory\n", stderr);
+        }
+        fgets(rows[level], CONST, stdin);
+    }
+
+    // print ASCII art for text one line at a time
+    for (int level = 0; level < height; ++level)
+    {
+        int i = 0;
+        int position, begin, end, length;
+        // loops until end of text string has been reached
+        while (text[i] != '\n')
+        {
+            // converts to lower case
+            char letter = tolower(text[i]);
+            // checks whether character is in valid range, else calculates default
+            // position
+            if (tolower(text[i]) >= FIRST_CHAR && tolower(text[i]) <= LAST_CHAR)
+            {
+                position = (int)(letter - FIRST_CHAR);
+            }
+            else
+            {
+                position = (int)(DEFAULT - FIRST_CHAR);
+            }
+            // calculates beginning of substring on current line of ASCII art array
+            begin = position * width;
+            // calculates end of substring on current line of ASCII art array
+            end = begin + width;
+            // calculates length of string to be output
+            length = end - begin;
+            // sets destination pointer for output string, then copies substring to it
+            char *display;
+            if ((display = malloc((length + 1))) == NULL)
+            {
+                fputs("Out of memory\n", stderr);
+            }
+            strncpy(display, rows[level] + begin, length);
+            // adds null char to end of substring
+            display[length] = '\0';
+            printf("%s", display);
+            free(display);      // frees allocated memory
+            ++i;
+        }
+        printf("\n");
+    }
+    // frees each row of ASCII art allocated in memory
+    for (int level = 0; level < height; ++level)
+    {
+        free(rows[level]);
+    }
+    free(rows);     // frees pointer to array containing ASCII art input
+    exit(EXIT_SUCCESS);
+}
