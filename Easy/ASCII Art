@@ -23,6 +23,7 @@
 //        is to be printed.
 // 5. Once all lines of the ASCII art have been printed, the 2D ASCII
 //    art array is freed, and the pointer to it is freed as well.
+//
 
 #include <stdlib.h>
 #include <stdio.h>
