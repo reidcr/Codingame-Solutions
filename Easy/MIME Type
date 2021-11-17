@@ -1,0 +1,150 @@
+//
+// The purpose of this program is to detect the MIME type of a file
+// based on its name. Algorithm:
+//
+// 1. Input number of elements in file association table and number
+//    of file names to be analyzed.
+// 2. Construct a dictionary consisting of pairs of file extensions
+//    and their corresponding MIME types.
+//    A. The dictionary structure consists of an int variable containing
+//      the number of entries, as well as a pointer to another structure
+//      consisting of character pointers to strings containing a file
+//      extension and the corresponding MIME type.
+//    B. The pointer to the mime/ext pair structure is initialized to
+//      an allocation large enough for "numEntries" of ext/mime pairs.
+//    C. Loop through each dictionary entry and initialize the ext/mime
+//      pointers to the appropriate strings, then lower-case the ext
+//      string.
+// 3. Declare variables to hold the file name string and a pointer to
+//    another string holding only that file's extension.
+// 4. Loop through each file name until all file names have been
+//    analyzed.
+//    A. Lower-case each file name string.
+//    B. Extract each file extension by setting a pointer to the end of
+//      the string and decrement until the pointer reaches the character
+//      just after the last dot, then return that pointer. If no ext
+//      found, then return NULL.
+//    C. Once extension found, step through each dictionary entry and
+//      find the MIME type matching that file extension. If not found
+//      or there was no extension, return "UNKNOWN", otherwise return
+//      the matching MIME type.
+//    D. Print the matching MIME type or "UNKNOWN" as needed.
+//
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define EXTSIZE 11
+#define MIMESIZE 51
+#define FNAMESIZE 512
+
+// dictionary entry consisting of pair with file extension and
+// matching mime type
+struct pair
+{
+    char *ext, *mime;
+};
+
+// defines structure of dictionary containing ext/mime pairs
+struct dictionary
+{
+    int numEntries;
+    struct pair *entry;
+};
+
+// converts string to lower case
+char *ToLower(char *str)
+{
+    for(; *str != '\0'; ++str)
+    {
+        *str = tolower(*str);
+    }
+    return(str);
+}
+
+// extracts extension from file name or returns null if there is
+// no extension
+char *GetExt(char *str)
+{
+    for (char *p = str + strlen(str); p != str; --p)
+    {
+        if (*(p - 1) == '.')
+        {
+            return(p);
+        }
+    }
+    return(NULL);
+}
+
+// matches file extensino with mime type or returns unknown if
+// no match found
+char *MatchAssoc(struct dictionary *d, char *ext)
+{
+    for (int i = 0; i < d->numEntries; ++i)
+    {
+        if (strcmp(d->entry[i].ext, ext) == 0)
+        {
+            return(d->entry[i].mime);
+        }
+    }
+    return("UNKNOWN");
+}
+
+// allocates memory and tests for success
+void *SafeMalloc(int amount, size_t size)
+{
+    void *vp;
+    if ((vp = malloc(amount * size)) == NULL)
+    {
+        fprintf(stderr, "Out of memory\n");
+        exit(EXIT_FAILURE);
+    }
+    return(vp);
+}
+
+int main()
+{
+    // inputs # of elements in assoc table and # of file names
+    // to be analyzed
+    int numElements, numFNames;
+    scanf("%d\n%d\n", &numElements, &numFNames);
+
+    // constructs dictionary consisting of ext/mime pairs
+    struct dictionary dict;
+    struct pair *pEntry;
+    dict.numEntries = numElements;
+    dict.entry = SafeMalloc(dict.numEntries, sizeof(struct pair));
+    for (int i = 0; i < dict.numEntries; ++i)
+    {
+        pEntry = dict.entry + i;
+        pEntry->ext = SafeMalloc(EXTSIZE, sizeof(char));
+        pEntry->mime = SafeMalloc(MIMESIZE, sizeof(char));
+        scanf("%s %s\n", pEntry->ext, pEntry->mime);
+        ToLower(pEntry->ext);
+    }
+
+    // inputs each file name for analysis
+    char fileName[FNAMESIZE];
+    char *pFName;
+    for (int i = 0; i < numFNames; ++i)
+    {
+        fgets(fileName, FNAMESIZE, stdin);
+        fileName[strlen(fileName) - 1] = '\0';
+        ToLower(fileName);
+        pFName = GetExt(fileName);
+        printf("%s\n", MatchAssoc(&dict, pFName ? pFName : ""));
+    }
+
+    // frees all memory allocated
+    for (int i = 0; i < dict.numEntries; ++i)
+    {
+        pEntry = dict.entry + i;
+        free(pEntry->ext);
+        free(pEntry->mime);
+    }
+    free(dict.entry);
+
+    return(EXIT_SUCCESS);
+}
