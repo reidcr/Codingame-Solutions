@@ -1,0 +1,146 @@
+//
+// The purpose of this program is to input a list of defibrillator locations in the
+// city of Montpellier and output the one closest to the user's location.
+// Algorithm:
+//
+// 1. Get user coordinates in degrees, change the comma in the coordinates to dots,
+//    then convert the strings to double values.
+// 2. Input the number of defibrillators to search.
+// 3. Loop through each defibrillator until all have been analyzed.
+//    A. Input a string containing the details of the current defibrillator.
+//    B. Separate each field of info by delimiter, making sure there are no
+//      consecutive delimiters.
+//    C. Update separator and convert current defibrillator coordinates to double
+//      values.
+//    D. Calculate distance to current defibrillator and update string containing
+//      closest defibrillator (1st defibrillator is always updated to be closest).
+// 4. Output closest defibrillator to screen.
+//
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <float.h>
+
+#define COORD 51        // defines maximum length of char strings for coordinates
+#define EARTH 6371      // radius of Earth in km
+#define DEFIB 257       // defines maximum length of char string for defib location
+#define ELEMENTS 6      // number of elements in defibrillator info array
+#define NAMEINDEX 1     // index for defibrillator name
+#define LONINDEX 4      // index for defibrillator longitude
+#define LATINDEX 5      // index for defibrillator latitude
+#define DIVISOR 2       // for dividing in half
+#define POWER 2         // for squaring values
+#define OLDSTR ";;"     // delim string to be changed
+#define NEWSTR "; ;"    // changed delim string
+#define DELIM ";"       // delimiter in defibrillator info string
+#define OLDSEP ','      // comma separator to be changed
+#define NEWSEP '.'      // dot separator after change
+#define ENDCHAR '\0'   // null char at end of string
+
+// changes any instance of ";;" in the string to "; ;" because strtok does not work
+// with consecutive delimiters
+char *UpdateString(char *infoStr)
+{
+    char *result;
+    int i, cnt = 0;
+    int newWlen = strlen(NEWSTR);
+    int oldWlen = strlen(OLDSTR);
+    for (i = 0; infoStr[i] != ENDCHAR; ++i)
+    {
+        if (strstr(&infoStr[i], OLDSTR) == &infoStr[i])
+        {
+            ++cnt;
+            i += oldWlen - 1;
+        }
+    }
+    result = (char *)malloc(i + cnt + (newWlen - oldWlen) + 1);
+    i = 0;
+    while (*infoStr)
+    {
+        if (strstr(infoStr, OLDSTR) == infoStr)
+        {
+            strcpy(&result[i], NEWSTR);
+            i += newWlen;
+            infoStr += oldWlen;
+        }
+        else
+        {
+            result [i++] = *infoStr++;
+        }
+    }
+    result[i] = ENDCHAR;
+    return(result);
+}
+
+// changes comma to dot because otherwise atof function will ignore anything after
+// radix separator
+char *SwitchSeparator(char *value)
+{
+    for (int i = 0; i < COORD; ++i)
+    {
+        if (value[i] == OLDSEP)
+            value[i] = NEWSEP;
+    }
+    return(value);
+}
+
+int main()
+{
+    // gets user coordinates in longitude and latitude (degrees)
+    char LON[COORD], LAT[COORD];
+    scanf("%s\n%s\n", LON, LAT);
+    // changes comma in coordinates to dot
+    SwitchSeparator(LON);
+    SwitchSeparator(LAT);
+    // converts char strings to floating values
+    double longA = atof(LON);
+    double latA = atof(LAT);
+
+    // gets number of defibrillators
+    int numDefib;
+    scanf("%d\n", &numDefib);
+    char defibInfo[DEFIB];
+    char *newInfo;
+    // maximum possible value that can be represented using double/float
+    double defibDist = DBL_MAX;
+    char closestDefib[DEFIB];               // name of closest defibrillator
+    for (int i = 0; i < numDefib; i++)      // loops through each defib in list
+    {
+        // gets string containing defib info and eats trailing newline character 
+        fgets(defibInfo, DEFIB, stdin);
+        defibInfo[strlen(defibInfo) - 1] = ENDCHAR;
+        char *infoArray[ELEMENTS];
+        // adds space between consecutive delimiters
+        newInfo = UpdateString(defibInfo);
+        // separates fields of info string by delimiter
+        char *cp = strtok(newInfo, DELIM);
+        int tokCnt = 0;
+        while (cp != NULL)
+        {
+            infoArray[tokCnt++] = cp;
+            cp = strtok(NULL, DELIM);
+        }
+        // updates separator and converts lat/lon values to double
+        SwitchSeparator(infoArray[LONINDEX]);
+        SwitchSeparator(infoArray[LATINDEX]);
+        double longB = atof(infoArray[LONINDEX]);
+        double latB = atof(infoArray[LATINDEX]);
+
+        // calculates distance to current defibrillator and updates closest defib
+        // if closer than previous (first defibrillator is always closest unless a
+        // subsequent closer defibrillator is found)
+        double distX = (longB - longA) * cos((latA + latB) / DIVISOR);
+        double distY = latB - latA;
+        double distD = sqrt(pow(distX, POWER) + pow(distY, POWER)) * EARTH;
+        if (distD < defibDist)
+        {
+            defibDist = distD;
+            strcpy(closestDefib, infoArray[NAMEINDEX]);
+        }
+    }
+    printf("%s\n", closestDefib);       // prints closest defib to screen
+
+    return(EXIT_SUCCESS);
+}
