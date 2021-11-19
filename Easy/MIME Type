@@ -78,7 +78,7 @@ char *GetExt(char *str)
     return(NULL);
 }
 
-// matches file extensino with mime type or returns unknown if
+// matches file extension with mime type or returns unknown if
 // no match found
 char *MatchAssoc(struct dictionary *d, char *ext)
 {
