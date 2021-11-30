@@ -1,0 +1,110 @@
+//
+// The purpose of this program is to simulate the encoding/decoding capabilities
+// of the Enigma machine. Algorithm:
+//
+// 1. Input desired operation, Caesar shift value, rotor strings, and message.
+// 2. Encoding path:
+//    A. Perform incrementing Caesar shift (starting at shift value, then increment
+//      by 1 for each shift).
+//    B. Use each rotor to encode the message three times.
+// 3. Decoding path:
+//    A. Use each rotor to decode the message three times.
+//    B. Perform decrementing Caesar shift (starting at shift value plus number of
+//      characters, then decrement by 1 for each shift).
+// 4. Output encoded/decoded message.
+//
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#define MAXOPLEN 7              // length of string denoting operation
+#define MAXROTLEN 28            // length of rotor string
+#define NUMLETTER 26            // number of letters in alphabet
+#define NUMROTOR 3              // number of rotors
+#define LETTERMOD 64            // converts ASCII value to alphabet position
+#define ZVALUE 90               // decimal value of Z
+#define AVALUE 65               // decimal value of A
+#define ATVALUE 64              // decimal value of @
+
+int main()
+{
+    // inputs encode or decode operation
+    char operation[MAXOPLEN];
+    scanf("%[^\n]", operation);
+    // inputs shift value
+    int shift;
+    scanf("%d\n", &shift);
+    // inputs rotor strings into array
+    char rotor[NUMROTOR][MAXROTLEN];
+    for (int i = 0; i < NUMROTOR; ++i)
+    {
+        scanf("%[^\n]\n", rotor[i]); 
+    }
+    // inputs message to encode or decode
+    char message[1025];
+    scanf("%[^\n]", message);
+
+    if (operation[0] == 'E')    // message is to be encoded
+    {
+        // performs incrementing Caesar shift of message
+        for (int i = 0; i < strlen(message); ++i)
+        {
+            int position = (int)message[i];     // converts char to int value
+            // obtains Caesar shift of current char
+            message[i] = (char)(((position - LETTERMOD + shift + i) % NUMLETTER) + 
+                LETTERMOD);
+            // special case: Z % 26 = 0 which gives us @ char, want to use Z char
+            // instead
+            if (message[i] == (char)ATVALUE)
+            {
+                message[i] = (char)ZVALUE;
+            }
+        }
+
+        // uses each rotor to encode message 3 times
+        for (int i = 0; i < NUMROTOR; ++i)
+        {
+            for (int j = 0; j < strlen(message); ++j)
+            {
+                message[j] = rotor[i][(int)message[j] - LETTERMOD - 1];
+            }
+        }
+    }
+    else
+    {
+        // outer loop sets the rotor to be used for decoding
+        for (int i = NUMROTOR - 1; i >= 0; --i)
+        {
+            // middle loop sets character to be decoded
+            for (int j = 0; j < strlen(message); ++j)
+            {
+                // inner loop looks for location in rotor string and converts
+                // it to letter in correct position of alphabet
+                for (int c = 0; c < strlen(rotor[i]); ++c)
+                {
+                    if (rotor[i][c] == message[j])
+                    {
+                        message[j] = (char)(AVALUE + c);
+                        break;
+                    }
+                }
+            }
+        }
+        // loop performs reverse of incrementing Caesar shift for each letter
+        for (int i = strlen(message) - 1; i >= 0; --i)
+        {
+            int idx = (int)message[i] - (shift + i);
+            // performs reverse of modulo operation to find correct ASCII value
+            // for decoded letter
+            while (idx < AVALUE)
+            {
+                idx += NUMLETTER;
+            }
+            message[i] = (char)idx;     // converts ASCII value to character
+        }
+    }
+    
+    printf("%s\n", message);        // outputs encoded or decoded message
+    return(EXIT_SUCCESS);
+}
