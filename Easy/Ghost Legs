@@ -1,0 +1,85 @@
+//
+// The purpose of this program is to simulate a game of Ghost Legs, a lottery
+// game common in Asia.  Algorithm:
+//
+// 1. Input the dimensions of the ghost legs diagram, then the diagram itself.
+// 2. Parse the top and bottom character strings into string arrays.
+// 3. Loop through each character in the top string array, moving down the
+//    diagram, and moving right or left as needed.
+// 4. Once the bottom has been reached, output the character in the bottom
+//    string array corresponding to the current position in the ghost legs
+//    diagram.  Every top label matches to a unique bottom label.
+//
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAXLEN 1025         // maximum length of ghost legs diagram
+#define POSID 3             // used to denote indices of symbols in diagram
+#define MAXINDEX 2          // used to set boundary conditions for path traversal
+
+int main()
+{
+    // inputs dimensions of ghost legs diagram
+    int width, height;
+    scanf("%d%d\n", &width, &height);
+    // inputs ghost legs diagram
+    char diagram[width][MAXLEN];
+    for (int i = 0; i < height; ++i) 
+    {
+        scanf("%[^\n]\n", diagram[i]);
+    }
+
+    // creates strings out of top and bottom rows of ghost legs diagram
+    char top[MAXLEN] = {0}, bottom[MAXLEN] = {0};
+    for (int i = 0; i < width; ++i)
+    {
+        if (!isspace(diagram[0][i]))
+        {
+            strncat(top, &diagram[0][i], 1);
+            strncat(bottom, &diagram[height - 1][i], 1);
+        }
+        
+    }
+    // loops through top row of diagram and traverses through the correct path for
+    // each element
+    for (int i = 0; i < strlen(top); ++i)
+    {
+        int position = i * POSID;
+        for (int j = 1; j <= height - MAXINDEX; ++j)
+        {
+            // checks for horizontal path on leftmost column, if so moves right
+            if (position == 0)
+            {
+                if (diagram[j][1] == '-')
+                {
+                    position += POSID;
+                }
+            }
+            // checks for horizontal path on rightmost column, if so moves left
+            else if (position == (width - 1))
+            {
+                if (diagram[j][width - MAXINDEX] == '-')
+                {
+                    position -= POSID;
+                }
+            }
+            // checks for horizontal path to right of middle columns, if so moves left
+            else if (diagram[j][position - 1] == '-')
+            {
+                position -= POSID;
+            }
+            // checks for horizontal path to left of middle columns, if so moves right
+            else if (diagram[j][position + 1] == '-')
+            {
+                position += POSID;
+            }
+        }
+        // prints current top character and corresponding bottom character
+        printf("%c%c\n", top[i], bottom[position / POSID]);
+    }
+
+    return(EXIT_SUCCESS);
+}
