@@ -1,0 +1,119 @@
+//
+// The purpose of this program is to simulate the task
+// of studying a region of space to look for dangerous
+// asteroids.  Input two pictures of the night sky at
+// given times and use those pictures to predict the
+// asteroid positions at a time in the future.
+// Algorithm:
+//
+// 1. Input dimensions of pictures, times, and
+//    2D string arrays representing the pictures.
+// 2. Use nested loops to look for each asteroid in
+//    the first picture.
+// 3. Once an asteroid has been found, use additional
+//    nested loops to find that same asteroid in the
+//    second picture.  An asteroid in the 1st picture
+//    is guaranteed to be in the second picture.
+// 4. Once the asteroid has been found in the second
+//    picture, calculate its x- and y- speed and use
+//    those speeds to calculate the position of said
+//    asteroid in the third picture.
+// 5. Output a picture showing the predicted locations
+//    of the asteroids at the given time in the future.
+//
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+
+// returns pointer to allocated memory
+void *SafeMalloc(int size)
+{
+    void *vp;
+    if ((vp = malloc(size)) == NULL)
+    {
+        fprintf(stderr, "malloc failed\n");
+        exit(EXIT_FAILURE);
+    }
+    return(vp);
+}
+
+int main()
+{
+    // inputs dimensions of asteroid pictures and times
+    int width, height;
+    float t1, t2, t3;
+    scanf("%d%d%f%f%f", &width, &height, &t1, &t2, &t3);
+    // declares pointers to string arrays representing asteroid pictures
+    char *pic1[height], *pic2[height], *pic3[height], dots[width];
+
+    // creates string of dots for 3rd picture to represent empty space
+    dots[0] = '\0';
+    for (int i = 0; i < width; ++i)
+    {
+        strcat(dots, ".");
+    }
+
+    // creates all 3 pictures with 3rd picture being initialized to empty space
+    for (int i = 0; i < height; ++i) 
+    {
+        char first_picture_row[width + 1], second_picture_row[width + 1];
+        scanf("%s%s", first_picture_row, second_picture_row);
+        pic1[i] = SafeMalloc(width + 1);
+        memcpy(pic1[i], first_picture_row, width + 1);
+        pic2[i] = SafeMalloc(width + 1);
+        memcpy(pic2[i], second_picture_row, width + 1);
+        pic3[i] = SafeMalloc(width + 1);
+        memcpy(pic3[i], dots, width + 1);
+    }
+
+    // following 2 nested loops look for each asteroid in 1st picture
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            int a, b, newx, newy;;
+            float distx, disty, time, speedx, speedy;
+            if (pic1[x][y] != '.')
+            {
+                // following 2 nested loops look for asteroid in 2nd picture
+                for (a = 0; a < height; ++a)
+                {
+                    for (b = 0; b < width; ++b)
+                    {
+                        // calculates x- and y- speed, then calculates position of
+                        // asteroid in 3rd picture
+                        if (pic2[a][b] == pic1[x][y])
+                        {
+                            speedx = (a - x) / (t2 - t1);
+                            speedy = (b - y) / (t2 - t1);
+                            newx = (int)floor(x + (speedx * (t3 - t1)));
+                            newy = (int)floor(y + (speedy * (t3 - t1)));
+                            // checks to make sure coordinates are positive, and whether
+                            // there is a closer asteroid already present
+                            if (newx >= 0 && newy >= 0)
+                            {
+                                if (pic3[newx][newy] == '.' || pic1[x][y] < pic3[newx][newy])
+                                {
+                                    pic3[newx][newy] = pic1[x][y];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // prints each row of 3rd picture, then frees memory for that row in all 3 pictures
+    for (int i = 0; i < height; ++i)
+    {
+        printf("%s\n", pic3[i]);
+        free(pic1[i]);
+        free(pic2[i]);
+        free(pic3[i]);
+    }
+
+    return(EXIT_SUCCESS);
+}
