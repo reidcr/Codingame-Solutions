@@ -1,0 +1,144 @@
+//
+// The purpose of this program is to analyze a number of
+// dungeon maps and determine which of them shows the best
+// path to the treasure.  If there is no good path, that
+// indicates the dungeon contains traps.  Algorithm:
+//
+// 1. Input dimensions of each map and the starting
+//    coordinates.
+// 2. Construct a 3D character array that will hold all the
+//    dungeon maps to be analyzed.
+// 3. Loop through each map, begin at the starting coordinates,
+//    and follow the path to determine whether they lead to the
+//    treasure.
+// 4. If a map leads to the treasure, keep track of whether it
+//    contains the shortest path.  If not, it leads to a trap
+//    and should not be used.
+// 5. Print the number of the map containing the best path to
+//    the treasure, or "TRAP" if no such map has been found.
+//
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <limits.h>
+
+// returns pointer to allocated memory
+void *SafeMalloc(int size)
+{
+    void *vp;
+    if ((vp = malloc(size)) == NULL)
+    {
+        fprintf(stderr, "malloc failed\n");
+        exit(EXIT_FAILURE);
+    }
+    return(vp);
+}
+
+int main()
+{
+    // inputs dimensions of each map
+    int width, height;
+    scanf("%d%d", &width, &height);
+    // inputs starting coordinates on each map
+    int start_row, start_col;
+    scanf("%d%d", &start_row, &start_col);
+
+    // creates 3D character array containing each dungeon map
+    int numMaps;
+    scanf("%d", &numMaps); 
+    fgetc(stdin);
+    char *maps[numMaps][height];
+    for (int i = 0; i < numMaps; i++) 
+    {
+        for (int j = 0; j < height; j++) 
+        {
+            char map_row[width + 1];
+            scanf("%[^\n]", map_row); 
+            fgetc(stdin);
+            maps[i][j] = SafeMalloc(width + 1);
+            memcpy(maps[i][j], map_row, width + 1);
+        }
+    }
+
+    // loops through each map and calculates the length of map's path
+    int bestPath = INT_MAX;
+    int bestMap = 0;
+    for (int i = 0; i < numMaps; ++i)
+    {
+        int pathCount = 0;
+        int mapx = start_col, mapy = start_row;
+        // loops until treasure found
+        while (maps[i][mapy][mapx] != 'T')
+        {
+            // if on path, moves accordingly and changes symbol to dot to indicate
+            // that point has already been traversed
+            if (maps[i][mapy][mapx] != '.')
+            {
+                switch(maps[i][mapy][mapx])
+                {
+                    case '^':
+                        maps[i][mapy][mapx] = '.';
+                        --mapy;
+                        break;
+                    case 'v':
+                        maps[i][mapy][mapx] = '.';
+                        ++mapy;
+                        break;
+                    case '<':
+                        maps[i][mapy][mapx] = '.';
+                        --mapx;
+                        break;
+                    case '>':
+                        maps[i][mapy][mapx] = '.';
+                        ++mapx;
+                        break;
+                }
+
+                // checks for out of bounds coordinates, if so breaks loop
+                if (mapx >= width || mapy >= height || mapx < 0 || mapy < 0)
+                {
+                    pathCount = INT_MAX;
+                    break;
+                }
+            }
+            // path reached dead-end so map contains trap
+            else
+            {
+                pathCount = INT_MAX;
+                break;
+            }
+            ++pathCount;
+        }
+
+        // updates best path and map if shorter path has been found
+        if (pathCount < bestPath)
+        {
+            bestPath = pathCount;
+            bestMap = i;
+        }
+        
+    }
+
+    // no good path has been found
+    if (bestPath == INT_MAX)
+    {
+        printf("TRAP\n");
+    }
+    // prints number corresponding to best map
+    else
+    {
+        printf("%d\n", bestMap);
+    }
+
+    // frees allocated memory for dungeon maps
+    for (int i = 0; i < numMaps; i++) 
+    {
+        for (int j = 0; j < height; j++) 
+        {
+            free(maps[i][j]);
+        }
+    }
+
+    return(EXIT_SUCCESS);
+}
