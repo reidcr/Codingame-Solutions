@@ -1,6 +1,8 @@
 /*
  * The purpose of this program is to parse a circuit of resistors,
- * and output the equivalent resistance of that circuit. Algorithm:
+ * and output the equivalent resistance of that circuit. Linked list
+ * and stack data structures are implemented to execute this program.
+ * Algorithm:
  * 1. Input resistors and their values, and create a dictionary
  *    containing this information.
  * 2. Input the circuit as a character string to be parsed.
