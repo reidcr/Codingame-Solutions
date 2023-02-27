@@ -1,0 +1,317 @@
+/*
+ * The purpose of this program is to parse a circuit of resistors,
+ * and output the equivalent resistance of that circuit. Algorithm:
+ * 1. Input resistors and their values, and create a dictionary
+ *    containing this information.
+ * 2. Input the circuit as a character string to be parsed.
+ * 3. Until the end of the string has been reached, loop through
+ *    each character and push to stack as needed.
+ *    A. If ( or [ is seen and pushed to stack, indicates the 
+ *      beginning of a series or parallel subcircuit respectively.
+ *    B. If a resistor name is seen, respective value is pushed to
+ *      stack.
+ *    C. If ) or ] is seen, indicates the end of respective subcircuit
+ *      and values are popped from stack and arithmetic is performed
+ *      until matching ( or [ is seen. Then pop ( or [ from stack and
+ *      push equivalent resistance to stack.
+ *    D. If delimiter not reached, complete resistor name has not been
+ *      identified so continue parsing through string.
+ * 4. Once entire string has been parsed and null terminator reached,
+ *    there should be only one value on stack.  This is the equivalent
+ *    resistance.
+ */
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+
+#define NAMELEN 128
+#define MAXNUMRES 10
+#define EQUAL 0
+#define ROUND 10.0
+
+/*
+ * Singly-linked list element
+ */
+typedef struct ListElmt_
+{
+    void                *data;
+    struct ListElmt_    *next;
+} ListElmt;
+
+/*
+ * Singly-linked list
+ */
+typedef struct List_
+{
+    int                 size;
+
+    int                 (*match)(const void *key1, const void *key2);
+    void                (*destroy)(void *data);
+
+    ListElmt            *head;
+    ListElmt            *tail;
+} List;
+
+#define list_size(list) ((list)->size)
+#define list_head(list) ((list)->head)
+#define list_tail(list) ((list)->tail)
+#define list_is_head(list, element) ((element) == (list)->head ? 1 : 0)
+#define list_is_tail(element) ((element)->next == NULL ? 1 : 0)
+#define list_data(element) ((element)->data)
+#define list_next(element) ((element)->next)
+
+void list_init(List *list, void (*destroy)(void *data))
+{
+    /* Initialize the list */
+    list->size = 0;
+    list->destroy = destroy;
+    list->head = NULL;
+    list->tail = NULL;
+}
+
+void list_destroy(List *list)
+{
+    void *data;
+
+    /* Remove each element */
+    while (list_size(list) > 0)
+    {
+        if (list_rem_next(list, NULL, (void **)&data) == 0 &&
+            list->destroy != NULL)
+        {
+            /* Call user-defined function to free dynamially allocated data. */
+            list->destroy(data);
+        }
+    }
+
+    /* No operations allowed now, but clear structure as precaution. */
+    memset(list, 0, sizeof(List));
+}
+
+int list_ins_next(List *list, ListElmt *element, const void *data)
+{
+    ListElmt *new_element;
+
+    /* Allocate storage for the element. */
+    if ((new_element = (ListElmt *)malloc(sizeof(ListElmt))) == NULL)
+        return -1;
+
+    /* Insert the element into the list. */
+    new_element->data = (void *)data;
+    if (element == NULL)
+    {
+        /* Handle insertion at the head of the list. */
+        if (list_size(list) == 0)
+            list->tail = new_element;
+        new_element->next = list->head;
+        list->head = new_element;
+    }
+    else
+    {
+        /* Handle insertion somewhere other than at the head. */
+        if (element->next == NULL)
+            list->tail = new_element;
+        new_element->next = element->next;
+        element->next = new_element;
+    }
+
+    /* Adjust the size of the list to account for the inserted element. */
+    list->size++;
+
+    return 0;
+}
+
+int list_rem_next(List *list, ListElmt *element, void **data)
+{
+    ListElmt *old_element;
+
+    /* Do not allow removal from an empty list. */
+    if (list_size(list) == 0)
+        return -1;
+
+    /* Remove the element from the list. */
+    if (element == NULL)
+    {
+        /* Handle removal from the head of the list. */
+        *data = list->head->data;
+        old_element = list->head;
+        list->head = list->head->next;
+
+        if (list_size(list) == 1)
+            list->tail = NULL;
+    }
+    else
+    {
+        /* Handle removal from somewhere other than the head. */
+        if (element->next == NULL)
+            return -1;
+
+        *data = element->next->data;
+        old_element = element->next;
+        element->next = element->next->next;
+
+        if (element->next == NULL)
+            list->tail = element;
+    }
+
+    /* Free the storage allocated by the abstract data type. */
+    free(old_element);
+
+    /* Adjust the size of the list to account for the removed element. */
+    list->size--;
+
+    return 0;
+}
+
+/*
+ * Implement stacks as linked lists.
+ */
+typedef List Stack;
+
+/*
+ * Public Interface
+ */
+#define stack_init list_init
+#define stack_destroy list_destroy
+#define stack_peek(stack) ((stack)->head == NULL ? NULL : (stack)->head->data)
+#define stack_size list_size
+
+int stack_push(Stack *stack, const void *data)
+{
+    /* Push the data onto the stack. */
+    return list_ins_next(stack, NULL, data);
+}
+
+int stack_pop(Stack *stack, void **data)
+{
+    /* Pop the data off the stack. */
+    return list_rem_next(stack, NULL, data);
+}
+
+
+int main()
+{
+    char circuit[NAMELEN], cirElem[NAMELEN], *resName[MAXNUMRES];
+    char *pChar;
+    int numResist;
+    float resValue[MAXNUMRES], resSubTotal = 0;
+    float *pFloat;
+    Stack resistors;
+    void *pVoid;
+
+    /* initialize some variables */
+    stack_init(&resistors, free);
+    cirElem[0] = '\0';
+
+    scanf("%d", &numResist);    /* get # of resistors */
+
+    /* create dictionary with resistor names & values */
+    for (int i = 0; i < numResist; ++i)
+    {
+        resName[i] = malloc(NAMELEN * sizeof(char));
+        scanf("%s%f", resName[i], &resValue[i]);
+        fgetc(stdin);
+    }
+
+    scanf("%[^\n]", circuit);   /* input circuit to be parsed */
+
+    /* loop until whole circuit has been parsed */
+    for (int i = 0; i <= (int)strlen(circuit); ++i)
+    {
+        /* 
+         * reaching these delimiters indicates a value is ready to be 
+         * pushed to the stack
+         */
+        if (circuit[i] == ' ' || circuit[i] == '\0')
+        {
+            /* beginning of series subcircuit */
+            if (strcmp(cirElem, "(") == EQUAL)
+            {
+                pChar = malloc(strlen(cirElem) * sizeof(char));
+                *pChar = *cirElem;
+                pChar[1] = '\0';
+                stack_push(&resistors, pChar);
+            }
+            /* beginning of parallel subcircuit */
+            else if (strcmp(cirElem, "[") == EQUAL)
+            {
+                pChar = malloc(strlen(cirElem) * sizeof(char));
+                *pChar = *cirElem;
+                pChar[1] = '\0';
+                stack_push(&resistors, pChar);
+            }
+            /* 
+             * end of parallel subcircuit so need to pop values from
+             * stack until beginning of parallel subcircuit reached,
+             * then push parallel equivalent resistance to stack
+             */
+            else if (strcmp(cirElem, "]") == EQUAL)
+            {
+                /* perform parallel arithmetic */
+                float *pSubTotal = malloc(sizeof(float));
+                while (*((char *)stack_peek(&resistors)) != '[')
+                {
+                    stack_pop(&resistors, &pFloat);
+                    resSubTotal += (1 / *pFloat);
+                }
+                resSubTotal = 1 / resSubTotal;
+                *pSubTotal = resSubTotal;
+                stack_pop(&resistors, &pVoid);
+                stack_push(&resistors, pSubTotal);
+                resSubTotal = 0;
+            }
+            /* 
+             * end of series subcircuit so need to pop values from
+             * stack until beginning of series subcircuit reached,
+             * then push series equivalent resistance to stack
+             */
+            else if (strcmp(cirElem, ")") == EQUAL)
+            {
+                float *pSubTotal = malloc(sizeof(float));
+                while (*((char *)stack_peek(&resistors)) != '(')
+                {
+                    stack_pop(&resistors, &pFloat);
+                    resSubTotal += *pFloat;
+                }
+                *pSubTotal = resSubTotal;
+                stack_pop(&resistors, &pVoid);
+                stack_push(&resistors, pSubTotal);
+                resSubTotal = 0;
+            }
+            /* 
+             * resistor name found in circuit, look up value in
+             * dictionary then push that value to stack
+             */
+            else
+            {
+                for (int j = 0; j < numResist; ++j)
+                {
+                    if (strcmp(cirElem, resName[j]) == EQUAL)
+                    {
+                        stack_push(&resistors, &resValue[j]);
+                        break;
+                    }
+                }
+            }
+            cirElem[0] = '\0';
+        }
+        /* 
+         * delimiter not yet reached so continue parsing value to be
+         * pushed to stack
+         */
+        else
+        {
+            strncat(cirElem, &circuit[i], 1);
+        }
+    }
+    /* 
+     * remaining value in stack is equivalent resistance so pop it,
+     * round to nearest decimal value, then print it
+     */
+    stack_pop(&resistors, &pFloat);
+    *pFloat = roundf(*pFloat * ROUND) / ROUND;
+    printf("%0.1f\n", *pFloat);
+    exit(EXIT_SUCCESS);
+}
